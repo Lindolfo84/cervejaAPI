@@ -22,6 +22,8 @@ public class CervejaDTO {
 	private String[] foodPairing;
 	private String brewersTips;
 	private String contributedBy;
+	private long versao;
+	private String ipAlteracao;
 
 	public long getID() {
 		return id;
@@ -190,4 +192,22 @@ public class CervejaDTO {
 	public void setContributedBy(String value) {
 		this.contributedBy = value;
 	}
+
+	public long getVersao() {
+		return versao;
+	}
+
+	public void setVersao(long versao) {
+		this.versao = versao;
+	}
+
+	public String getIpAlteracao() {
+		return ipAlteracao;
+	}
+
+	public void setIpAlteracao(String ipAlteracao) {
+		this.ipAlteracao = ipAlteracao;
+	}
+	
+	
 }

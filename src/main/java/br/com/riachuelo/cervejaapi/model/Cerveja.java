@@ -31,6 +31,8 @@ public class Cerveja {
 	private long srm;
 	private double ph;
 	private long attenuationLevel;
+	private long versao;
+	private String ipAlteracao;
 	
 	@OneToOne(cascade = CascadeType.ALL)
 	private Volume volume;
@@ -215,4 +217,22 @@ public class Cerveja {
 	public void setContributedBy(String value) {
 		this.contributedBy = value;
 	}
+
+	public long getVersao() {
+		return versao;
+	}
+
+	public void setVersao(long versao) {
+		this.versao = versao;
+	}
+
+	public String getIpAlteracao() {
+		return ipAlteracao;
+	}
+
+	public void setIpAlteracao(String ipAlteracao) {
+		this.ipAlteracao = ipAlteracao;
+	}
+	
+		
 }

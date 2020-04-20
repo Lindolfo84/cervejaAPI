@@ -1,12 +1,13 @@
 package br.com.riachuelo.cervejaapi.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import javax.transaction.Transactional;
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -19,8 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -40,7 +39,13 @@ public class CervejaController {
 	private CervejaConverter cervejaConverter;	
 	@Autowired
 	private CervejaRepository repository;
+	@Autowired
+	private HttpServletRequest request;
 	
+	/**
+	 * Mapping para retornar a lista de cervejas.
+	 * @return
+	 */
 	@GetMapping("/lista")
 	public ResponseEntity<CervejaDTO[]> get(){
 		
@@ -54,14 +59,34 @@ public class CervejaController {
 	    ResponseEntity<CervejaDTO[]> result = restTemplate.exchange(uri, HttpMethod.GET, entity, CervejaDTO[].class);
 
 	    CervejaDTO[] cervejaDTOs = result.getBody();
-	   
+		
 	    List<Cerveja> cervejasCriadas = repository.saveAll(Arrays.asList(cervejaConverter.dtoToEntity(cervejaDTOs)));
 	    
-	    CervejaDTO[] entityToDto = cervejaConverter.entityToDto(cervejasCriadas);
+	    String ipAddress = request.getHeader("x-forwarded-for");
+	    if (ipAddress == null) {
+	        ipAddress = request.getHeader("X_FORWARDED_FOR");
+	        if (ipAddress == null){
+	            ipAddress = request.getRemoteAddr();
+	        }
+	    }
+	    List<Cerveja> cervejasCriadasAlteradas = new ArrayList<Cerveja>();
+	    
+	    for (Cerveja cerveja : cervejasCriadas) {
+			cerveja.setVersao(1);
+			cerveja.setIpAlteracao(ipAddress);
+			cervejasCriadasAlteradas.add(cerveja);
+		}
+	    
+	    CervejaDTO[] entityToDto = cervejaConverter.entityToDto(cervejasCriadasAlteradas);
 	    
   	    return ResponseEntity.ok(entityToDto);
 	}
 	
+	/**
+	 * Mapping para retornar detalhes de uma cerveja através de um ID
+	 * @param id
+	 * @return
+	 */
 	@GetMapping("/{id}")
 	public ResponseEntity<CervejaDTO[]> detail(@PathVariable Long id){
 		
@@ -75,6 +100,12 @@ public class CervejaController {
 	    return restTemplate.exchange(uri, HttpMethod.GET, entity, CervejaDTO[].class);
 	}
 	
+	/**
+	 * Mapping para alterar a descrição de uma cerveja.
+	 * @param id
+	 * @param descricaoDTO
+	 * @return
+	 */
 	@PutMapping("/{id}")
 	public ResponseEntity<Object> update(@PathVariable("id") Long id, @RequestBody DescricaoForm descricaoDTO) {
 		Optional<Cerveja> optional = repository.findById(id);
@@ -82,6 +113,7 @@ public class CervejaController {
 		if (optional.isPresent()) {
 			Cerveja cerveja = optional.get();
 			cerveja.setDescription(descricaoDTO.getDescricao());
+			cerveja.setVersao(cerveja.getVersao()+1);
 			return ResponseEntity.ok(cervejaConverter.entityToDto(cerveja));
 		} else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
